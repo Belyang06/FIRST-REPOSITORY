@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Stack </title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="not-authenticated">
+
+    <div class="bg-orb"></div>
+
+    <header class="app-header">
+        <div class="container header-content">
+            <a class="brand" href="#/">
+                <span class="brand-icon">⚡</span> FULL STACK
+            </a>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="#/" class="nav-item">Home</a></li>
+                    <li class="guest-only"><a href="#/login" class="nav-item">Login</a></li>
+                    <li class="guest-only"><a href="#/register" class="nav-btn">Get Started</a></li>
+                    
+                    <li class="auth-only"><a href="#/requests" class="nav-item">Requests</a></li>
+                    <li class="admin-only"><a href="#/admin-requests" class="nav-item highlight">Manage</a></li>
+                    
+                    <li class="auth-only dropdown-wrapper">
+                        <button class="user-menu-btn">Account ▾</button>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-header">Menu</div>
+                            <a href="#/profile">Profile</a>
+                            <div class="divider admin-only"></div>
+                            <a href="#/admin-accounts" class="admin-only">Accounts</a>
+                            <a href="#/admin-depts" class="admin-only">Departments</a>
+                            <a href="#/admin-employees" class="admin-only">Employee</a>
+                            <div class="divider"></div>
+                            <a href="#" onclick="handleLogout()" class="text-danger">Sign Out</a>
+                        </div>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container main-content">
+        
+        <section id="home-page" class="page active">
+            <div class="hero-section">
+                <h1>Manage Your <span class="gradient-text">Workflow</span></h1>
+                <p class="subtitle">A full stack solution for corporate resource and employee management.</p>
+                
+                <div class="auth-only">
+                    <div class="welcome-card">
+                        <h3>Welcome back, <span id="home-user-name" class="gradient-text">User</span></h3>
+                        <p>You are logged in. Check your dashboard for updates.</p>
+                        <a href="#/requests" class="btn btn-primary mt-3">Go to Dashboard &rarr;</a>
+                    </div>
+                </div>
+
+                <div class="guest-only hero-actions">
+                    <a href="#/login" class="btn btn-outline">Log In</a>
+                    <a href="#/register" class="btn btn-primary">Create Account</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="register-page" class="page">
+            <div class="auth-card mx-auto">
+                <div class="card-head">
+                    <h2>Join Full Stack</h2>
+                    <p>Create your employee account</p>
+                </div>
+                <form onsubmit="handleRegister(event)">
+                    <div class="grid-2">
+                        <div class="input-group"><label>First Name</label><input type="text" id="reg-fname" required></div>
+                        <div class="input-group"><label>Last Name</label><input type="text" id="reg-lname" required></div>
+                    </div>
+                    <div class="input-group"><label>Email Address</label><input type="email" id="reg-email" required></div>
+                    <div class="input-group"><label>Password</label><input type="password" id="reg-pass" minlength="6" required></div>
+                    <button type="submit" class="btn btn-primary w-100">Create Account</button>
+                </form>
+                <div class="auth-footer">
+                    <a href="#/login">Already have an account? Log in</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="verify-email-page" class="page">
+            <div class="auth-card mx-auto text-center">
+                <div class="icon-box">✉️</div>
+                <h2>Check your Inbox</h2>
+                <p>We sent a verification link to <strong id="verify-email-display" class="text-primary">...</strong></p>
+                <button onclick="simulateVerification()" class="btn btn-primary w-100 mt-3">Simulate Verification Click</button>
+            </div>
+        </section>
+
+        <section id="login-page" class="page">
+            <div class="auth-card mx-auto">
+                <div class="card-head">
+                    <h2>Welcome Back</h2>
+                    <p>Enter your credentials to access the portal</p>
+                </div>
+                <form onsubmit="handleLogin(event)">
+                    <div class="input-group"><label>Email</label><input type="email" id="login-email" required></div>
+                    <div class="input-group"><label>Password</label><input type="password" id="login-pass" required></div>
+                    <button type="submit" class="btn btn-primary w-100">Sign In</button>
+                </form>
+                <div class="auth-footer">
+                    <p>Admin Demo: admin@example.com / 123456</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="profile-page" class="page">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h2>User Profile</h2>
+                </div>
+                <div class="profile-layout">
+                    <div class="avatar-placeholder" id="prof-avatar">👤</div>
+                    <div class="profile-info">
+                        <h3 id="prof-name">Name</h3>
+                        <p id="prof-email" class="text-muted">email@example.com</p>
+                        <div class="badge-container">
+                            <span id="prof-role" class="badge">Role</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="requests-page" class="page">
+            <div class="page-header">
+                <h2>My Requests</h2>
+                <button class="btn btn-primary" onclick="openModal('requestModal')">New Request +</button>
+            </div>
+            <div class="table-container">
+                <table class="modern-table">
+                    <thead><tr><th>Date</th><th>Type</th><th>Details</th><th>Status</th></tr></thead>
+                    <tbody id="requests-table-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="admin-requests-page" class="page">
+            <div class="page-header">
+                <h2>Request Approval</h2>
+                <span class="badge badge-outline">Admin</span>
+            </div>
+            <div class="table-container">
+                <table class="modern-table">
+                    <thead><tr><th>User</th><th>Type</th><th>Items</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="admin-req-workflow-table"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="admin-accounts-page" class="page">
+            <div class="page-header"><h2>System Accounts</h2><button class="btn btn-success" onclick="openAccountModal()">+ Add User</button></div>
+            <div class="table-container">
+                <table class="modern-table">
+                    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Verified</th><th>Action</th></tr></thead>
+                    <tbody id="admin-acc-table"></tbody>
+                </table>
+            </div>
+        </section>
+        
+        <section id="admin-depts-page" class="page">
+            <div class="page-header"><h2>Departments</h2><button class="btn btn-success" onclick="openDeptModal()">+ Add Dept</button></div>
+            <div class="table-container">
+                <table class="modern-table">
+                    <thead><tr><th>Name</th><th>Description</th><th>Actions</th></tr></thead>
+                    <tbody id="admin-dept-table"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="admin-employees-page" class="page">
+            <div class="page-header"><h2>Employee Directory</h2><button class="btn btn-success" onclick="openEmployeeModal()">+ Add Employee</button></div>
+            <div class="table-container">
+                <table class="modern-table">
+                    <thead><tr><th>ID</th><th>User</th><th>Position</th><th>Dept</th><th>Actions</th></tr></thead>
+                    <tbody id="admin-emp-table"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <div id="transferModal" class="modal-overlay">
+        <div class="modal glass-modal">
+            <div class="modal-header"><h5>Transfer Employee</h5><button class="close-modal" onclick="closeModal('transferModal')">&times;</button></div>
+            <div class="modal-body">
+                <input type="hidden" id="transfer-emp-id">
+                <p class="mb-3">Transferring: <strong id="transfer-emp-name" class="text-primary"></strong></p>
+                <div class="input-group">
+                    <label>New Department</label>
+                    <div class="select-wrapper">
+                        <select id="transfer-dept-select"></select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-warning w-100" onclick="submitTransfer()">Confirm Transfer</button></div>
+        </div>
+    </div>
+
+    <div id="deptModal" class="modal-overlay">
+        <div class="modal glass-modal">
+            <div class="modal-header"><h5>Manage Department</h5><button class="close-modal" onclick="closeModal('deptModal')">&times;</button></div>
+            <div class="modal-body">
+                <input type="hidden" id="dept-id">
+                <div class="input-group"><label>Name</label><input id="dept-name"></div>
+                <div class="input-group"><label>Description</label><textarea id="dept-desc" rows="3"></textarea></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-primary w-100" onclick="saveAdminDept()">Save Department</button></div>
+        </div>
+    </div>
+
+    <div id="requestModal" class="modal-overlay">
+        <div class="modal glass-modal">
+            <div class="modal-header"><h5>Create Request</h5><button class="close-modal" onclick="closeModal('requestModal')">&times;</button></div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label>Category</label>
+                    <div class="select-wrapper">
+                        <select id="req-type"><option>Equipment</option><option>Leave</option><option>Resources</option></select>
+                    </div>
+                </div>
+                <label class="mb-2 block">Items Required</label>
+                <div id="req-items-container" class="scroll-box"></div>
+                <button class="btn btn-dashed w-100 mt-2" onclick="addRequestItemRow()">+ Add Line Item</button>
+            </div>
+            <div class="modal-footer"><button class="btn btn-primary w-100" onclick="submitRequest()">Submit Request</button></div>
+        </div>
+    </div>
+
+    <div id="accountModal" class="modal-overlay">
+        <div class="modal glass-modal">
+            <div class="modal-header"><h5>Account Details</h5><button class="close-modal" onclick="closeModal('accountModal')">&times;</button></div>
+            <div class="modal-body">
+                <input type="hidden" id="acc-id">
+                <div class="grid-2">
+                    <div class="input-group"><input id="acc-fname" placeholder="First Name"></div>
+                    <div class="input-group"><input id="acc-lname" placeholder="Last Name"></div>
+                </div>
+                <div class="input-group"><input id="acc-email" placeholder="Email"></div>
+                <div class="input-group"><input id="acc-pass" placeholder="Password"></div>
+                <div class="grid-2 align-center">
+                    <div class="select-wrapper"><select id="acc-role"><option value="User">User</option><option value="Admin">Admin</option></select></div>
+                    <label class="checkbox-label"><input type="checkbox" id="acc-verified"> Verified</label>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-primary w-100" onclick="saveAdminAccount()">Save Account</button></div>
+        </div>
+    </div>
+
+    <div id="employeeModal" class="modal-overlay">
+        <div class="modal glass-modal">
+            <div class="modal-header"><h5>Employee Record</h5><button class="close-modal" onclick="closeModal('employeeModal')">&times;</button></div>
+            <div class="modal-body">
+                <div class="input-group"><label>Employee ID</label><input id="emp-id"></div>
+                <div class="input-group"><label>Linked User</label><div class="select-wrapper"><select id="emp-user-select"></select></div></div>
+                <div class="input-group"><label>Job Title</label><input id="emp-pos"></div>
+                <div class="input-group"><label>Department</label><div class="select-wrapper"><select id="emp-dept-select"></select></div></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-primary w-100" onclick="saveAdminEmployee()">Save Record</button></div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+    <script src="script.js"></script>
+</body>
+</html>

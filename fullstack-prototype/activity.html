@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CorpPortal - Final Version</title>
+    <style>
+        /* --- 1. RESET & VARS --- */
+        :root {
+            --primary: #1a2a6c;
+            --primary-hover: #131f53;
+            --secondary: #b21f1f;
+            --bg: #f4f6f9;
+            --text: #333;
+            --white: #fff;
+            --border: #ddd;
+            --radius: 6px;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            /* Status Colors */
+            --status-pending: #ffc107;
+            --status-approved: #28a745;
+            --status-rejected: #dc3545;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.6; }
+        
+        /* --- 2. LAYOUT UTILS --- */
+        .container { max-width: 1000px; margin: 0 auto; padding: 0 20px; width: 100%; }
+        .flex { display: flex; align-items: center; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .gap-2 { gap: 0.5rem; }
+        .mb-3 { margin-bottom: 1rem; }
+        .mt-3 { margin-top: 1rem; }
+        .w-100 { width: 100%; }
+        .text-center { text-align: center; }
+        .text-muted { color: #666; font-size: 0.9rem; }
+        .text-danger { color: #dc3545; }
+        .fw-bold { font-weight: bold; }
+
+        /* --- 3. COMPONENTS --- */
+        /* Navbar */
+        .navbar { background: linear-gradient(90deg, var(--primary), var(--secondary)); padding: 1rem 0; color: white; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .nav-content { display: flex; justify-content: space-between; align-items: center; }
+        .brand { font-size: 1.2rem; font-weight: bold; text-decoration: none; color: white; }
+        .nav-links { list-style: none; display: flex; gap: 20px; }
+        .nav-links a { color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.95rem; transition: 0.2s; cursor: pointer; }
+        .nav-links a:hover { color: white; text-decoration: underline; }
+
+        /* Buttons */
+        .btn { padding: 0.4rem 1rem; border: none; border-radius: var(--radius); cursor: pointer; font-size: 0.95rem; transition: 0.2s; display: inline-block; text-decoration: none; text-align: center; }
+        .btn-sm { padding: 0.25rem 0.6rem; font-size: 0.85rem; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #fd7e14; color: white; }
+        .btn-outline { border: 1px solid #ccc; background: white; color: #333; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        
+        /* Cards & Tables */
+        .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px; }
+        .card-header { background: #333; color: white; padding: 15px; font-weight: bold; }
+        .card-body { padding: 20px; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        
+        .table { width: 100%; border-collapse: collapse; background: white; box-shadow: var(--shadow); border-radius: var(--radius); overflow: hidden; }
+        .table th, .table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        .table th { background: #333; color: white; }
+        
+        /* Forms */
+        .form-group { margin-bottom: 1rem; text-align: left; }
+        label { display: block; margin-bottom: 0.3rem; font-weight: 500; }
+        input, select, textarea { width: 100%; padding: 0.6rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 1rem; }
+
+        /* Badges */
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; color: white; }
+        .status-Pending { background-color: var(--status-pending); color: #333; }
+        .status-Approved { background-color: var(--status-approved); }
+        .status-Rejected { background-color: var(--status-rejected); }
+        
+        /* Page Logic */
+        .page { display: none; padding: 2rem 0; animation: fadeIn 0.4s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- 4. MODALS & TOAST --- */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-overlay.open { display: flex; animation: fadeIn 0.2s; }
+        .modal { background: white; width: 100%; max-width: 500px; border-radius: var(--radius); box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden; }
+        .modal-header { padding: 15px; background: #f8f9fa; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 15px; background: #f8f9fa; border-top: 1px solid #eee; text-align: right; }
+        .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 2000; }
+        .toast { background: #333; color: white; padding: 12px 20px; border-radius: var(--radius); margin-top: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); transform: translateX(120%); transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: flex; align-items: center; gap: 10px; }
+        .toast.show { transform: translateX(0); }
+        .toast.success { background: #28a745; }
+        .toast.danger { background: #dc3545; }
+        .toast.warning { background: #ffc107; color: #333; }
+
+        /* Auth Helpers */
+        .dropdown { position: relative; }
+        .dropdown-menu { display: none; position: absolute; right: 0; top: 100%; background: white; border: 1px solid #ddd; border-radius: var(--radius); box-shadow: var(--shadow); min-width: 150px; flex-direction: column; padding: 5px 0; }
+        .dropdown:hover .dropdown-menu { display: flex; }
+        .dropdown-menu a { color: #333 !important; display: block; padding: 8px 15px; text-decoration: none; }
+        .dropdown-menu a:hover { background: #f4f6f9; }
+        .dropdown-divider { height: 1px; background: #eee; margin: 5px 0; }
+        
+        .request-item-row { display: flex; gap: 10px; margin-bottom: 10px; padding: 10px; background: #f9f9f9; border: 1px solid #eee; border-radius: 4px; }
+
+        body.authenticated .guest-only { display: none !important; }
+        body.not-authenticated .auth-only { display: none !important; }
+        body:not(.is-admin) .admin-only { display: none !important; }
+    </style>
+</head>
+<body class="not-authenticated">
+
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a class="brand" href="#/">CORP PORTAL</a>
+            <ul class="nav-links">
+                <li><a href="#/">Home</a></li>
+                <li class="guest-only"><a href="#/login">Login</a></li>
+                <li class="guest-only"><a href="#/register">Register</a></li>
+                <li class="auth-only"><a href="#/requests">My Requests</a></li>
+                <li class="admin-only"><a href="#/admin-requests" style="color: #ffc107;">Manage Requests</a></li>
+                <li class="auth-only dropdown">
+                    <a href="#">Menu ▼</a>
+                    <div class="dropdown-menu">
+                        <a href="#/profile">Profile</a>
+                        <div class="dropdown-divider admin-only"></div>
+                        <a href="#/admin-accounts" class="admin-only">Accounts</a>
+                        <a href="#/admin-depts" class="admin-only">Departments</a>
+                        <a href="#/admin-employees" class="admin-only">Employees</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" onclick="handleLogout()" style="color:red!important;">Logout</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container" style="flex: 1;">
+        
+        <section id="home-page" class="page active">
+            <div class="mt-5 text-center">
+                <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">Corporate Management System</h1>
+                <div class="auth-only">
+                    <div class="alert alert-success" style="padding: 1rem; background: #d4edda; color: #155724; border-radius: 6px; display: inline-block;">
+                        Welcome back, <strong id="home-user-name">User</strong>!
+                    </div>
+                </div>
+                <div class="guest-only mt-3">
+                    <a href="#/login" class="btn btn-primary btn-lg">Login to Access</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="register-page" class="page">
+            <div class="card mx-auto" style="max-width: 450px;">
+                <div class="card-header">Create Account</div>
+                <div class="card-body">
+                    <form onsubmit="handleRegister(event)">
+                        <div class="grid-2 mb-3">
+                            <div><label>First Name</label><input type="text" id="reg-fname" required></div>
+                            <div><label>Last Name</label><input type="text" id="reg-lname" required></div>
+                        </div>
+                        <div class="form-group"><label>Email</label><input type="email" id="reg-email" required></div>
+                        <div class="form-group"><label>Password</label><input type="password" id="reg-pass" minlength="6" required></div>
+                        <button type="submit" class="btn btn-success w-100">Sign Up</button>
+                    </form>
+                    <div class="text-center mt-3"><a href="#/login">Already have an account?</a></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="verify-email-page" class="page">
+            <div class="card mx-auto text-center" style="max-width: 500px; padding: 2rem;">
+                <h3>Verify Email</h3>
+                <p>Link sent to <strong id="verify-email-display">...</strong></p>
+                <button onclick="simulateVerification()" class="btn btn-primary w-100">✅ Verify Now</button>
+            </div>
+        </section>
+
+        <section id="login-page" class="page">
+            <div class="card mx-auto" style="max-width: 400px;">
+                <div class="card-header">Login</div>
+                <div class="card-body">
+                    <form onsubmit="handleLogin(event)">
+                        <div class="form-group"><label>Email</label><input type="email" id="login-email" required></div>
+                        <div class="form-group"><label>Password</label><input type="password" id="login-pass" required></div>
+                        <button type="submit" class="btn btn-primary w-100">Sign In</button>
+                    </form>
+                    <div class="mt-3 text-center text-muted">Admin: admin@example.com / 123456</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="profile-page" class="page">
+            <div class="card">
+                <div class="card-header">My Profile</div>
+                <div class="card-body">
+                    <h3><span id="prof-name">Name</span></h3>
+                    <p>Email: <span id="prof-email"></span></p>
+                    <p>Role: <span id="prof-role" class="status-badge status-Pending" style="background: #333"></span></p>
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+                        <button class="btn btn-danger" onclick="openDeleteAccountModal()">Delete My Account</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="requests-page" class="page">
+            <div class="flex-between mb-3">
+                <h2>My Requests</h2>
+                <button class="btn btn-primary" onclick="openModal('requestModal')">+ New Request</button>
+            </div>
+            <table class="table">
+                <thead><tr><th>Date</th><th>Type</th><th>Items</th><th>Status</th></tr></thead>
+                <tbody id="requests-table-body"></tbody>
+            </table>
+        </section>
+
+        <section id="admin-requests-page" class="page">
+            <div class="mb-3">
+                <h2>Manage Requests (Admin)</h2>
+                <p class="text-muted">Approve or Reject employee requests.</p>
+            </div>
+            <table class="table">
+                <thead><tr><th>User</th><th>Type</th><th>Items</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="admin-req-workflow-table"></tbody>
+            </table>
+        </section>
+
+        <section id="admin-accounts-page" class="page">
+            <div class="flex-between mb-3"><h2>Accounts</h2><button class="btn btn-success" onclick="openAccountModal()">+ Add Account</button></div>
+            <table class="table">
+                <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Verified</th><th>Action</th></tr></thead>
+                <tbody id="admin-acc-table"></tbody>
+            </table>
+        </section>
+        
+        <section id="admin-depts-page" class="page">
+            <div class="flex-between mb-3"><h2>Departments</h2><button class="btn btn-success" onclick="openDeptModal()">+ Add Dept</button></div>
+            <table class="table">
+                <thead><tr><th>Name</th><th>Description</th><th>Actions</th></tr></thead>
+                <tbody id="admin-dept-table"></tbody>
+            </table>
+        </section>
+
+        <section id="admin-employees-page" class="page">
+            <div class="flex-between mb-3"><h2>Employees</h2><button class="btn btn-success" onclick="openEmployeeModal()">+ Add Employee</button></div>
+            <table class="table">
+                <thead><tr><th>ID</th><th>User</th><th>Position</th><th>Dept</th><th>Actions</th></tr></thead>
+                <tbody id="admin-emp-table"></tbody>
+            </table>
+        </section>
+    </div>
+
+    <div id="deleteConfirmModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h5 class="text-danger">⚠️ Confirm Deletion</h5>
+                <button class="close-modal" onclick="closeModal('deleteConfirmModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to permanently delete this user?</p>
+                <div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-top: 10px;">
+                    <strong>User:</strong> <span id="delete-target-email"></span><br>
+                    <small>This action cannot be undone.</small>
+                </div>
+                <input type="hidden" id="delete-target-id">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('deleteConfirmModal')">Cancel</button>
+                <button class="btn btn-danger" onclick="executeDelete()">Yes, Delete Account</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="deleteMyAccountModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h5 class="text-danger">⚠️ Delete My Account</h5>
+                <button class="close-modal" onclick="closeModal('deleteMyAccountModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 4px; margin-bottom: 15px;">
+                    <strong>⚠️ WARNING</strong><br>
+                    <small>This action is <strong>permanent</strong> and cannot be undone. You will lose access to all your data and requests.</small>
+                </div>
+                <p>Email: <strong><span id="delete-my-account-email"></span></strong></p>
+                <p style="margin-top: 15px; color: #666;">
+                    <small>To confirm deletion, please type your email address below:</small>
+                </p>
+                <input type="text" id="delete-account-confirm-email" placeholder="Enter your email to confirm" style="margin-top: 10px;">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('deleteMyAccountModal')">Cancel</button>
+                <button class="btn btn-danger" onclick="executeMyAccountDelete()" id="delete-account-btn" disabled>Delete My Account</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="transferModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header"><h5>Department Transfer</h5><button class="close-modal" onclick="closeModal('transferModal')">&times;</button></div>
+            <div class="modal-body">
+                <input type="hidden" id="transfer-emp-id">
+                <p class="mb-3">Transferring: <strong id="transfer-emp-name"></strong></p>
+                <div class="form-group">
+                    <label>Select New Department</label>
+                    <select id="transfer-dept-select"></select>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-warning" onclick="submitTransfer()">Confirm Transfer</button></div>
+        </div>
+    </div>
+
+    <div id="deptModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header"><h5>Department</h5><button class="close-modal" onclick="closeModal('deptModal')">&times;</button></div>
+            <div class="modal-body">
+                <input type="hidden" id="dept-id">
+                <div class="form-group"><label>Name</label><input id="dept-name"></div>
+                <div class="form-group"><label>Description</label><textarea id="dept-desc" rows="3"></textarea></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-primary" onclick="saveAdminDept()">Save Changes</button></div>
+        </div>
+    </div>
+
+    <div id="requestModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header"><h5>New Request</h5><button class="close-modal" onclick="closeModal('requestModal')">&times;</button></div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Type</label>
+                    <select id="req-type"><option>Equipment</option><option>Leave</option><option>Resources</option></select>
+                </div>
+                <label>Items</label>
+                <div id="req-items-container"></div>
+                <button class="btn btn-outline btn-sm w-100 mt-3" onclick="addRequestItemRow()">+ Add Item</button>
+            </div>
+            <div class="modal-footer"><button class="btn btn-primary" onclick="submitRequest()">Submit</button></div>
+        </div>
+    </div>
+
+    <div id="accountModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header"><h5>Account</h5><button class="close-modal" onclick="closeModal('accountModal')">&times;</button></div>
+            <div class="modal-body">
+                <input type="hidden" id="acc-id">
+                <div class="grid-2 mb-3">
+                    <input id="acc-fname" placeholder="First Name">
+                    <input id="acc-lname" placeholder="Last Name">
+                </div>
+                <div class="form-group"><input id="acc-email" placeholder="Email"></div>
+                <div class="form-group"><input id="acc-pass" placeholder="Password"></div>
+                <div class="grid-2">
+                    <select id="acc-role"><option value="User">User</option><option value="Admin">Admin</option></select>
+                    <div class="flex gap-2"><input type="checkbox" id="acc-verified" style="width: auto;"><label style="margin:0">Verified</label></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-primary" onclick="saveAdminAccount()">Save</button></div>
+        </div>
+    </div>
+
+    <div id="employeeModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header"><h5>Employee</h5><button class="close-modal" onclick="closeModal('employeeModal')">&times;</button></div>
+            <div class="modal-body">
+                <div class="form-group"><label>Emp ID</label><input id="emp-id"></div>
+                <div class="form-group"><label>User</label><select id="emp-user-select"></select></div>
+                <div class="form-group"><label>Position</label><input id="emp-pos"></div>
+                <div class="form-group"><label>Dept</label><select id="emp-dept-select"></select></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-primary" onclick="saveAdminEmployee()">Save</button></div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script>
+        // --- 1. SETUP & UTILS ---
+        const STORAGE_KEY = 'ipt_demo_final';
+        let currentUser = null;
+        window.db = { accounts: [], departments: [], employees: [], requests: [] };
+
+        function safeMsg(msg, type='success') {
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            el.className = `toast ${type}`;
+            el.innerText = msg;
+            container.appendChild(el);
+            setTimeout(() => el.classList.add('show'), 10);
+            setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 3000);
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('open'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+        // --- 2. DATA LAYER ---
+        function loadData() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            if (data) { try { window.db = JSON.parse(data); } catch(e) {} }
+            if (!window.db.accounts || window.db.accounts.length === 0) {
+                window.db.accounts = [{ id: 1, fname: 'System', lname: 'Admin', email: 'admin@example.com', pass: '123456', role: 'Admin', verified: true }];
+                window.db.departments = [{ id: 1, name: 'IT', desc: 'Tech' }, { id: 2, name: 'HR', desc: 'People' }];
+                saveData();
+            }
+        }
+        function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(window.db)); }
+
+        // --- 3. AUTH LOGIC ---
+        function handleRegister(e) {
+            e.preventDefault();
+            const email = document.getElementById('reg-email').value;
+            if (window.db.accounts.find(u => u.email === email)) return safeMsg("Email taken!", "danger");
+            window.db.accounts.push({ id: Date.now(), fname: document.getElementById('reg-fname').value, lname: document.getElementById('reg-lname').value, email, pass: document.getElementById('reg-pass').value, role: 'User', verified: false });
+            saveData();
+            localStorage.setItem('unverified_email', email);
+            safeMsg("Account created! Verify email.");
+            navigateTo('#/verify-email');
+        }
+
+        function simulateVerification() {
+            const email = localStorage.getItem('unverified_email');
+            const user = window.db.accounts.find(u => u.email === email);
+            if (user) { user.verified = true; saveData(); safeMsg("Verified! Login now."); navigateTo('#/login'); }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+            const user = window.db.accounts.find(u => u.email === email && u.pass === pass);
+            if (!user) return safeMsg("Invalid credentials", "danger");
+            if (!user.verified) { localStorage.setItem('unverified_email', email); return navigateTo('#/verify-email'); }
+            currentUser = user; localStorage.setItem('auth_token', user.email);
+            updateAuthState(); safeMsg(`Welcome, ${user.fname}!`); navigateTo('#/requests');
+        }
+
+        function handleLogout() {
+            currentUser = null; localStorage.removeItem('auth_token'); updateAuthState(); safeMsg("Logged out"); navigateTo('#/');
+        }
+
+        function openDeleteAccountModal() {
+            if (!currentUser) return safeMsg("Not authenticated", "danger");
+            document.getElementById('delete-my-account-email').innerText = currentUser.email;
+            document.getElementById('delete-account-confirm-email').value = '';
+            document.getElementById('delete-account-btn').disabled = true;
+            openModal('deleteMyAccountModal');
+        }
+
+        function validateDeleteAccountConfirm() {
+            const confirmEmail = document.getElementById('delete-account-confirm-email').value;
+            const btn = document.getElementById('delete-account-btn');
+            if (confirmEmail === currentUser.email) {
+                btn.disabled = false;
+            } else {
+                btn.disabled = true;
+            }
+        }
+
+        function executeMyAccountDelete() {
+            if (!currentUser) return safeMsg("Not authenticated", "danger");
+            const confirmEmail = document.getElementById('delete-account-confirm-email').value;
+            if (confirmEmail !== currentUser.email) return safeMsg("Email does not match", "danger");
+            
+            window.db.accounts = window.db.accounts.filter(u => u.id !== currentUser.id);
+            saveData();
+            closeModal('deleteMyAccountModal');
+            safeMsg("Your account has been deleted", "success");
+            handleLogout();
+        }
+
+        // --- 4. ROUTER ---
+        function updateAuthState() {
+            const body = document.body;
+            if (currentUser) {
+                body.classList.remove('not-authenticated'); body.classList.add('authenticated');
+                body.classList.toggle('is-admin', currentUser.role === 'Admin');
+                document.getElementById('home-user-name').innerText = currentUser.fname;
+            } else {
+                body.classList.add('not-authenticated'); body.classList.remove('authenticated'); body.classList.remove('is-admin');
+            }
+        }
+
+        function navigateTo(hash) { window.location.hash = hash; }
+
+        function handleRouting() {
+            let hash = window.location.hash || '#/';
+            const adminRoutes = ['#/admin-accounts', '#/admin-depts', '#/admin-employees', '#/admin-requests'];
+            if (!currentUser && hash.includes('#/admin')) return navigateTo('#/login');
+            if (currentUser && currentUser.role !== 'Admin' && adminRoutes.includes(hash)) return navigateTo('#/');
+
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const pageId = {
+                '#/': 'home-page', '#/login': 'login-page', '#/register': 'register-page', '#/verify-email': 'verify-email-page',
+                '#/profile': 'profile-page', '#/requests': 'requests-page', '#/admin-requests': 'admin-requests-page',
+                '#/admin-accounts': 'admin-accounts-page', '#/admin-depts': 'admin-depts-page', '#/admin-employees': 'admin-employees-page'
+            }[hash] || 'home-page';
+
+            const pageEl = document.getElementById(pageId);
+            if(pageEl) pageEl.classList.add('active');
+
+            if(hash === '#/profile') renderProfile();
+            if(hash === '#/requests') renderRequests();
+            if(hash === '#/admin-requests') renderAdminRequests();
+            if(hash === '#/verify-email') document.getElementById('verify-email-display').innerText = localStorage.getItem('unverified_email') || 'Unknown';
+            if(hash.startsWith('#/admin') && hash !== '#/admin-requests') renderAdminData();
+        }
+
+        // --- 5. RENDERERS ---
+        function renderProfile() {
+            if(currentUser) {
+                document.getElementById('prof-name').innerText = currentUser.fname + " " + currentUser.lname;
+                document.getElementById('prof-email').innerText = currentUser.email;
+                document.getElementById('prof-role').innerText = currentUser.role;
+            }
+        }
+
+        function renderRequests() {
+            const myReqs = window.db.requests.filter(r => r.employeeEmail === currentUser.email);
+            document.getElementById('requests-table-body').innerHTML = myReqs.map(r => `
+                <tr><td>${r.date}</td><td>${r.type}</td>
+                <td>${r.items.map(i=>i.qty+'x '+i.name).join(', ')}</td>
+                <td><span class="status-badge status-${r.status}">${r.status}</span></td></tr>
+            `).join('') || '<tr><td colspan="4">No requests.</td></tr>';
+        }
+
+        function renderAdminRequests() {
+            document.getElementById('admin-req-workflow-table').innerHTML = window.db.requests.map((r, index) => `
+                <tr>
+                    <td>${r.employeeEmail}</td><td>${r.type}</td>
+                    <td>${r.items.map(i=>i.qty+' '+i.name).join(', ')}</td>
+                    <td><span class="status-badge status-${r.status}">${r.status}</span></td>
+                    <td>
+                        ${r.status === 'Pending' ? `
+                            <button class="btn btn-sm btn-success" onclick="handleRequestAction(${index}, 'Approved')">✔</button>
+                            <button class="btn btn-sm btn-danger" onclick="handleRequestAction(${index}, 'Rejected')">✖</button>
+                        ` : '<span class="text-muted">Closed</span>'}
+                    </td>
+                </tr>
+            `).join('') || '<tr><td colspan="5">No requests found.</td></tr>';
+        }
+
+        function handleRequestAction(index, newStatus) {
+            window.db.requests[index].status = newStatus;
+            saveData(); renderAdminRequests(); safeMsg(`Request ${newStatus}`);
+        }
+
+        function renderAdminData() {
+            document.getElementById('admin-acc-table').innerHTML = window.db.accounts.map(u => `
+                <tr><td>${u.fname} ${u.lname}</td><td>${u.email}</td><td>${u.role}</td><td>${u.verified ? '✅' : '❌'}</td>
+                <td><button class="btn btn-sm btn-danger" onclick="deleteAcc(${u.id})">Del</button></td></tr>
+            `).join('');
+
+            document.getElementById('admin-dept-table').innerHTML = window.db.departments.map(d => `
+                <tr><td>${d.name}</td><td>${d.desc}</td>
+                <td><button class="btn btn-sm btn-primary" onclick="editDept(${d.id})">Edit</button> 
+                <button class="btn btn-sm btn-danger" onclick="deleteDept(${d.id})">Del</button></td></tr>
+            `).join('');
+
+            document.getElementById('admin-emp-table').innerHTML = window.db.employees.map(e => `
+                <tr>
+                    <td>${e.id}</td><td>${e.email}</td><td>${e.pos}</td><td>${e.dept}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="openTransferModal('${e.id}')">Transfer</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteEmp('${e.id}')">Del</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // --- 6. SECURE DELETE & LOGIC ---
+
+        function deleteAcc(id) {
+            // Rule 1: Self-Delete Guard
+            if (currentUser && id === currentUser.id) return safeMsg("You cannot delete your own account.", "danger");
+
+            const targetUser = window.db.accounts.find(u => u.id === id);
+            if (!targetUser) return safeMsg("User not found.", "warning");
+
+            // Rule 2: Last Admin Guard
+            if (targetUser.role === 'Admin') {
+                const adminCount = window.db.accounts.filter(u => u.role === 'Admin').length;
+                if (adminCount <= 1) return safeMsg("Cannot delete the last Admin.", "danger");
+            }
+
+            // Valid: Open Modal
+            document.getElementById('delete-target-id').value = id;
+            document.getElementById('delete-target-email').innerText = targetUser.email;
+            openModal('deleteConfirmModal');
+        }
+
+        function executeDelete() {
+            const id = parseInt(document.getElementById('delete-target-id').value);
+            window.db.accounts = window.db.accounts.filter(u => u.id !== id);
+            saveData(); renderAdminData(); closeModal('deleteConfirmModal');
+            safeMsg("Account deleted.", "success");
+        }
+
+        function openTransferModal(empId) {
+            const emp = window.db.employees.find(e => e.id == empId);
+            if(!emp) return;
+            document.getElementById('transfer-emp-id').value = emp.id;
+            document.getElementById('transfer-emp-name').innerText = emp.email;
+            document.getElementById('transfer-dept-select').innerHTML = window.db.departments
+                .filter(d => d.name !== emp.dept)
+                .map(d => `<option value="${d.name}">${d.name}</option>`).join('');
+            openModal('transferModal');
+        }
+
+        function submitTransfer() {
+            const empId = document.getElementById('transfer-emp-id').value;
+            const newDept = document.getElementById('transfer-dept-select').value;
+            const idx = window.db.employees.findIndex(e => e.id == empId);
+            if(idx > -1) { window.db.employees[idx].dept = newDept; saveData(); closeModal('transferModal'); renderAdminData(); safeMsg(`Transferred to ${newDept}`); }
+        }
+
+        function openDeptModal() { document.getElementById('dept-id').value = ''; document.getElementById('dept-name').value = ''; document.getElementById('dept-desc').value = ''; openModal('deptModal'); }
+        function editDept(id) { const d = window.db.departments.find(x => x.id === id); if(d) { document.getElementById('dept-id').value = d.id; document.getElementById('dept-name').value = d.name; document.getElementById('dept-desc').value = d.desc; openModal('deptModal'); } }
+        function saveAdminDept() {
+            const id = document.getElementById('dept-id').value, name = document.getElementById('dept-name').value, desc = document.getElementById('dept-desc').value;
+            if(!name) return safeMsg("Name required", "warning");
+            if(id) { const idx = window.db.departments.findIndex(d => d.id == id); if(idx > -1) window.db.departments[idx] = { ...window.db.departments[idx], name, desc }; }
+            else { window.db.departments.push({ id: Date.now(), name, desc }); }
+            saveData(); closeModal('deptModal'); renderAdminData(); safeMsg("Department Saved");
+        }
+        function deleteDept(id) { if(confirm("Delete?")) { window.db.departments = window.db.departments.filter(d => d.id !== id); saveData(); renderAdminData(); } }
+        function deleteEmp(id) { if(confirm("Remove Employee?")) { window.db.employees = window.db.employees.filter(e => e.id != id); saveData(); renderAdminData(); } }
+
+        function addRequestItemRow() {
+            const div = document.createElement('div'); div.className = 'request-item-row';
+            div.innerHTML = `<input placeholder="Item" style="flex:2"><input type="number" placeholder="Qty" style="flex:1"><button onclick="this.parentElement.remove()" class="btn btn-danger btn-sm">×</button>`;
+            document.getElementById('req-items-container').appendChild(div);
+        }
+        function submitRequest() {
+            const rows = document.querySelectorAll('#req-items-container .request-item-row');
+            if(rows.length === 0) return safeMsg("Add items first", "warning");
+            const items = Array.from(rows).map(r => ({ name: r.querySelectorAll('input')[0].value, qty: r.querySelectorAll('input')[1].value }));
+            window.db.requests.push({ date: new Date().toLocaleDateString(), type: document.getElementById('req-type').value, items, status: 'Pending', employeeEmail: currentUser.email });
+            saveData(); closeModal('requestModal'); renderRequests(); safeMsg("Request sent!");
+            document.getElementById('req-items-container').innerHTML = ''; addRequestItemRow();
+        }
+
+        function openAccountModal() { document.getElementById('acc-id').value = ''; openModal('accountModal'); }
+        function saveAdminAccount() {
+            window.db.accounts.push({ id: Date.now(), fname: document.getElementById('acc-fname').value, lname: document.getElementById('acc-lname').value, email: document.getElementById('acc-email').value, pass: document.getElementById('acc-pass').value, role: document.getElementById('acc-role').value, verified: document.getElementById('acc-verified').checked });
+            saveData(); closeModal('accountModal'); renderAdminData();
+        }
+        function openEmployeeModal() {
+            document.getElementById('emp-user-select').innerHTML = window.db.accounts.map(u => `<option value="${u.email}">${u.email}</option>`).join('');
+            document.getElementById('emp-dept-select').innerHTML = window.db.departments.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
+            openModal('employeeModal');
+        }
+        function saveAdminEmployee() {
+            window.db.employees.push({ id: document.getElementById('emp-id').value, email: document.getElementById('emp-user-select').value, pos: document.getElementById('emp-pos').value, dept: document.getElementById('emp-dept-select').value });
+            saveData(); closeModal('employeeModal'); renderAdminData();
+        }
+
+        window.addEventListener('load', () => {
+            loadData();
+            const token = localStorage.getItem('auth_token');
+            if(token) { const user = window.db.accounts.find(u => u.email === token); if(user) { currentUser = user; updateAuthState(); } }
+            window.addEventListener('hashchange', handleRouting);
+            if(!window.location.hash) window.location.hash = '#/';
+            handleRouting();
+            addRequestItemRow();
+            document.getElementById('delete-account-confirm-email').addEventListener('input', validateDeleteAccountConfirm);
+        });
+    </script>
+</body>
+</html>

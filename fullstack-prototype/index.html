@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full-Stack App (Student Build)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="not-authenticated">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Full-Stack App</a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item role-logged-out">
+                        <a class="nav-link" href="#/login">Login</a>
+                    </li>
+                    <li class="nav-item role-logged-out">
+                        <a class="nav-link" href="#/register">Register</a>
+                    </li>
+                    <li class="nav-item dropdown role-logged-in">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <!-- Username will go here -->
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="#/profile">Profile</a></li>
+                            <li><a class="dropdown-item" href="#/my-requests">My Requests</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logout-link">Logout</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item role-admin">
+                        <a class="nav-link" href="#/employees">Employees</a>
+                    </li>
+                    <li class="nav-item role-admin">
+                        <a class="nav-link" href="#/accounts">Accounts</a>
+                    </li>
+                    <li class="nav-item role-admin">
+                        <a class="nav-link" href="#/departments">Departments</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-4">
+        <section id="home-page" class="page active">
+            <h1>Welcome</h1>
+            <p>This is the home page.</p>
+        </section>
+
+        <section id="register-page" class="page">
+            <h1>Register</h1>
+            <form id="register-form" class="mt-3">
+                <div class="mb-3">
+                    <label for="register-first-name" class="form-label">First Name</label>
+                    <input type="text" class="form-control" id="register-first-name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="register-last-name" class="form-label">Last Name</label>
+                    <input type="text" class="form-control" id="register-last-name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="register-email" class="form-label">Email address</label>
+                    <input type="email" class="form-control" id="register-email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="register-password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="register-password" minlength="6" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Register</button>
+            </form>
+        </section>
+
+        <section id="verify-email-page" class="page">
+            <h1>Verify Email</h1>
+            <p id="verification-message"></p>
+            <button id="simulate-verification-btn" class="btn btn-primary">✅ Simulate Email Verification</button>
+        </section>
+
+        <section id="login-page" class="page">
+            <h1>Login</h1>
+            <form id="login-form" class="mt-3">
+                <div class="mb-3">
+                    <label for="login-email" class="form-label">Email address</label>
+                    <input type="email" class="form-control" id="login-email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="login-password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="login-password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+            </form>
+        </section>
+
+        <section id="profile-page" class="page">
+            <h1>Profile</h1>
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h5 class="card-title" id="profile-name"></h5>
+                    <p class="card-text">Email: <span id="profile-email"></span></p>
+                    <p class="card-text">Role: <span id="profile-role"></span></p>
+                    <button class="btn btn-primary" id="edit-profile-btn">Edit Profile</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="employees-page" class="page">
+            <h1>Employees</h1>
+            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#employeeModal" id="add-employee-btn">+ Add Employee</button>
+            <div id="employees-list">
+                <!-- Employees table will be rendered here -->
+            </div>
+
+            <!-- Employee Modal -->
+            <div class="modal fade" id="employeeModal" tabindex="-1" aria-labelledby="employeeModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="employeeModalLabel">Add/Edit Employee</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="employee-form">
+                                <input type="hidden" id="employee-id-field">
+                                <div class="mb-3">
+                                    <label for="employee-id" class="form-label">Employee ID</label>
+                                    <input type="text" class="form-control" id="employee-id" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="employee-user-email" class="form-label">User Email</label>
+                                    <input type="email" class="form-control" id="employee-user-email" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="employee-position" class="form-label">Position</label>
+                                    <input type="text" class="form-control" id="employee-position" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="employee-department" class="form-label">Department</label>
+                                    <select class="form-select" id="employee-department" required>
+                                        <!-- Options will be populated by JavaScript -->
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="employee-hire-date" class="form-label">Hire Date</label>
+                                    <input type="date" class="form-control" id="employee-hire-date" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Employee</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="departments-page" class="page">
+            <h1>Departments</h1>
+            <button class="btn btn-primary mb-3" id="add-department-btn">+ Add Department</button>
+            <div id="departments-list">
+                <!-- Departments table will be rendered here -->
+            </div>
+        </section>
+
+        <section id="accounts-page" class="page">
+            <h1>Accounts</h1>
+            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#accountModal" id="add-account-btn">+ Add Account</button>
+            <div id="accounts-list">
+                <!-- Accounts table will be rendered here -->
+            </div>
+
+            <!-- Account Modal -->
+            <div class="modal fade" id="accountModal" tabindex="-1" aria-labelledby="accountModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="accountModalLabel">Add/Edit Account</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="account-form">
+                                <input type="hidden" id="account-id">
+                                <div class="mb-3">
+                                    <label for="account-first-name" class="form-label">First Name</label>
+                                    <input type="text" class="form-control" id="account-first-name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="account-last-name" class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" id="account-last-name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="account-email" class="form-label">Email address</label>
+                                    <input type="email" class="form-control" id="account-email" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="account-password" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="account-password" minlength="6">
+                                    <small class="form-text text-muted" id="password-help-text">Leave blank to keep current password.</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="account-role" class="form-label">Role</label>
+                                    <select class="form-select" id="account-role" required>
+                                        <option value="user">User</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" id="account-verified">
+                                    <label class="form-check-label" for="account-verified">Verified</label>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Account</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="my-requests-page" class="page">
+            <h1>My Requests</h1>
+            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#requestModal" id="add-request-btn">+ New Request</button>
+            <div id="requests-list">
+                <!-- User requests will go here -->
+            </div>
+
+            <!-- Request Modal -->
+            <div class="modal fade" id="requestModal" tabindex="-1" aria-labelledby="requestModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="requestModalLabel">New Request</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="request-form">
+                                <div class="mb-3">
+                                    <label for="request-type" class="form-label">Type</label>
+                                    <select class="form-select" id="request-type" required>
+                                        <option value="">Select Type</option>
+                                        <option value="equipment">Equipment</option>
+                                        <option value="leave">Leave</option>
+                                        <option value="resources">Resources</option>
+                                    </select>
+                                </div>
+                                <div id="request-items-container" class="mb-3">
+                                    <label class="form-label">Items</label>
+                                    <div class="input-group mb-2">
+                                        <input type="text" class="form-control" placeholder="Item Name" data-item-name required>
+                                        <input type="number" class="form-control" placeholder="Quantity" data-item-qty value="1" min="1" required>
+                                        <button type="button" class="btn btn-outline-danger remove-item-btn">×</button>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-secondary btn-sm mb-3" id="add-item-field">+ Add More Items</button>
+                                <button type="submit" class="btn btn-primary">Submit Request</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script src="script.js"></script>
+</body>
+</html>
